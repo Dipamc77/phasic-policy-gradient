@@ -85,6 +85,8 @@ def train_fn(env_name="coinrun",
 def main():
     parser = argparse.ArgumentParser(description='Process PPG training arguments.')
     parser.add_argument('--env_name', type=str, default='coinrun')
+    parser.add_argument('--distribution_mode', type=str, default='hard')
+    parser.add_argument('--interacts_total', type=int, default=64)
     parser.add_argument('--num_envs', type=int, default=64)
     parser.add_argument('--n_epoch_pi', type=int, default=1)
     parser.add_argument('--n_epoch_vf', type=int, default=1)
@@ -124,6 +126,8 @@ def main():
 
     train_fn(
         env_name=args.env_name,
+        distribution_mode=args.distribution_mode,
+        interacts_total=args.interacts_total,
         num_envs=args.num_envs,
         n_epoch_pi=args.n_epoch_pi,
         n_epoch_vf=args.n_epoch_vf,
