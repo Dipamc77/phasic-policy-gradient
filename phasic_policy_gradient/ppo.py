@@ -137,6 +137,7 @@ def learn(
     comm: "(MPI.Comm) MPI communicator" = None,
     callbacks: "(seq of function(dict)->bool) to run each update" = (),
     learn_state: "dict with optional keys {'opts', 'roller', 'lsh', 'reward_normalizer', 'curr_interact_count', 'seg_buf'}" = None,
+    writer=None,
 ):
     if comm is None:
         comm = MPI.COMM_WORLD
@@ -197,6 +198,7 @@ def learn(
         initial_state=model.initial_state(venv.num),
         keep_buf=100,
         keep_non_rolling=log_save_opts.get("log_new_eps", False),
+        writer=writer,
     )
 
     lsh = learn_state.get("lsh") or LogSaveHelper(

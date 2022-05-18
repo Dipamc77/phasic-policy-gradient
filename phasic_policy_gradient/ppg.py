@@ -227,6 +227,7 @@ def learn(
     interacts_total=float("inf"),
     name2coef=None,
     comm=None,
+    writer=None,
 ):
     """
     Run PPO for X iterations
@@ -253,6 +254,7 @@ def learn(
             interacts_total=interacts_total,
             store_segs=store_segs,
             comm=comm,
+            writer=writer,
             **ppo_hps,
         )
 

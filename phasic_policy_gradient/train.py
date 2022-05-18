@@ -1,4 +1,7 @@
 import argparse
+from distutils.util import strtobool
+import time
+from torch.utils.tensorboard import SummaryWriter
 from mpi4py import MPI
 from . import ppg
 from . import torch_util as tu
@@ -28,7 +31,9 @@ def train_fn(env_name="coinrun",
     beta_clone=1.0,
     vf_true_weight=1.0,
     log_dir='/tmp/ppg',
-    comm=None):
+    comm=None,
+    writer=None,
+):
     if comm is None:
         comm = MPI.COMM_WORLD
     tu.setup_dist(comm=comm)
@@ -74,6 +79,7 @@ def train_fn(env_name="coinrun",
         n_pi=n_pi,
         name2coef=name2coef,
         comm=comm,
+        writer=writer,
     )
 
 def main():
@@ -87,8 +93,32 @@ def main():
     parser.add_argument('--clip_param', type=float, default=0.2)
     parser.add_argument('--kl_penalty', type=float, default=0.0)
     parser.add_argument('--arch', type=str, default='dual') # 'shared', 'detach', or 'dual'
+    parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+        help="if toggled, this experiment will be tracked with Weights and Biases")
+    parser.add_argument("--wandb-project-name", type=str, default="phasic-policy-gradient",
+        help="the wandb's project name")
+    parser.add_argument("--wandb-entity", type=str, default=None,
+        help="the entity (team) of wandb's project")
 
     args = parser.parse_args()
+    run_name = f"{args.env_name}__phasic_policy_gradient__{int(time.time())}"
+    if args.track:
+        import wandb
+
+        wandb.init(
+            project=args.wandb_project_name,
+            entity=args.wandb_entity,
+            sync_tensorboard=True,
+            config=vars(args),
+            name=run_name,
+            monitor_gym=True,
+            save_code=True,
+        )
+    writer = SummaryWriter(f"runs/{run_name}")
+    writer.add_text(
+        "hyperparameters",
+        "|param|value|\n|-|-|\n%s" % ("\n".join([f"|{key}|{value}|" for key, value in vars(args).items()])),
+    )
 
     comm = MPI.COMM_WORLD
 
@@ -100,7 +130,9 @@ def main():
         n_aux_epochs=args.n_aux_epochs,
         n_pi=args.n_pi,
         arch=args.arch,
-        comm=comm)
+        comm=comm,
+        writer=writer,
+    )
 
 if __name__ == '__main__':
     main()

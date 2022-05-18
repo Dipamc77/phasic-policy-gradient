@@ -42,6 +42,7 @@ class VecMonitor2(PostActProcessing):
         keep_buf: "(int) how many returns/lengths/infos to keep" = 0,
         keep_sep_eps: "keep separate buffer per env" = False,
         keep_non_rolling: "keep separate buffer that must be explicitly cleared" = False,
+        writer: "(SummaryWriter) for tensorboard" = None,
     ):
         """
         use n_per_env if you want to keep sep
@@ -63,6 +64,8 @@ class VecMonitor2(PostActProcessing):
             self.non_rolling_buf = deque([])
         else:
             self.non_rolling_buf = None
+        self.writer = writer
+        self.global_step = 0
         self.eprets = np.zeros(self.num, "f")
         self.eplens = np.zeros(self.num, "i")
 
@@ -71,12 +74,16 @@ class VecMonitor2(PostActProcessing):
         infos = self.env.get_info()
         self.eprets += lastrews
         self.eplens += 1
+        self.global_step += self.num
         for i in range(self.num):
             if firsts[i]:
                 timefromstart = round(time.time() - self.tstart, 6)
                 ep = Episode(self.eprets[i], self.eplens[i], timefromstart, infos[i])
                 if self.ep_buf is not None:
                     self.ep_buf.append(ep)
+                    print(f"global_step={self.global_step}, episodic_return={ep.ret}")
+                    self.writer.add_scalar("charts/episodic_return", ep.ret, self.global_step)
+                    self.writer.add_scalar("charts/episodic_length", ep.len, self.global_step)
                 if self.per_env_buf is not None:
                     self.per_env_buf[i].append(ep)
                 if self.non_rolling_buf is not None:

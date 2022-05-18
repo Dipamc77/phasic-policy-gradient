@@ -18,6 +18,7 @@ class Roller:
         keep_sep_eps: "keep buffer of per-env episodes in VecMonitor2" = False,
         keep_non_rolling: "also keep a non-rolling buffer of episode stats" = False,
         keep_cost: "keep per step costs and add to segment" = False,
+        writer: "summary writer" = None,
     ):
         """
             All outputs from public methods are torch arrays on default device
@@ -29,12 +30,14 @@ class Roller:
                 keep_buf=keep_buf,
                 keep_sep_eps=keep_sep_eps,
                 keep_non_rolling=keep_non_rolling,
+                writer=writer,
             )
         self._venv = venv
         self._step_count = 0
         self._state = initial_state
         self._infos = None
         self._keep_cost = keep_cost
+        self.writer = writer
         self.has_non_rolling_eps = keep_non_rolling
 
     @property
