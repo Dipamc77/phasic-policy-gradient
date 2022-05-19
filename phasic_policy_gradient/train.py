@@ -1,5 +1,6 @@
 import argparse
 from distutils.util import strtobool
+from procgen import ProcgenEnv
 import time
 from torch.utils.tensorboard import SummaryWriter
 from mpi4py import MPI
